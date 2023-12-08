@@ -24,7 +24,8 @@ type alias Photo =
 
 
 type alias Model =
-    Photo
+    { photo : Maybe Photo
+    }
 
 
 photoDecoder : Decoder Photo
@@ -45,12 +46,15 @@ baseUrl =
 
 initialModel : Model
 initialModel =
-    { id = 1
-    , url = baseUrl ++ "4.jpg"
-    , caption = "Wood"
-    , liked = False
-    , comments = [ "YTTA" ]
-    , newComment = ""
+    { photo =
+        Just
+            { id = 1
+            , url = baseUrl ++ "4.jpg"
+            , caption = "Wood"
+            , liked = False
+            , comments = [ "YTTA" ]
+            , newComment = ""
+            }
     }
 
 
@@ -67,7 +71,7 @@ fetchFeed =
         }
 
 
-viewLoveButton : Model -> Html Msg
+viewLoveButton : Photo -> Html Msg
 viewLoveButton model =
     let
         buttonClass =
@@ -108,7 +112,7 @@ viewCommentList comments =
                 ]
 
 
-viewComments : Model -> Html Msg
+viewComments : Photo -> Html Msg
 viewComments model =
     div []
         [ viewCommentList model.comments
@@ -126,7 +130,7 @@ viewComments model =
         ]
 
 
-viewDetailedPhoto : Model -> Html Msg
+viewDetailedPhoto : Photo -> Html Msg
 viewDetailedPhoto model =
     div [ class "detailed-photo" ]
         [ img [ src model.url ] []
@@ -138,13 +142,23 @@ viewDetailedPhoto model =
         ]
 
 
+viewFeed : Maybe Photo -> Html Msg
+viewFeed maybePhoto =
+    case maybePhoto of
+        Just photo ->
+            viewDetailedPhoto photo
+
+        Nothing ->
+            text ""
+
+
 view : Model -> Html Msg
 view model =
     div []
         [ div [ class "header" ]
             [ h1 [] [ text "Picshare" ] ]
         , div [ class "content-flow" ]
-            [ viewDetailedPhoto model ]
+            [ viewFeed model.photo ]
         ]
 
 
@@ -155,7 +169,7 @@ type Msg
     | LoadFeed (Result Http.Error Photo)
 
 
-saveNewComment : Model -> Model
+saveNewComment : Photo -> Photo
 saveNewComment model =
     let
         comment =
@@ -172,21 +186,42 @@ saveNewComment model =
             }
 
 
+toggleLike : Photo -> Photo
+toggleLike photo =
+    { photo | liked = not photo.liked }
+
+
+updateComment : String -> Photo -> Photo
+updateComment comment photo =
+    { photo | newComment = comment }
+
+
+updateFeed : (Photo -> Photo) -> Maybe Photo -> Maybe Photo
+updateFeed updatePhoto maybePhoto =
+    Maybe.map updatePhoto maybePhoto
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ToggleLike ->
-            ( { model | liked = not model.liked }
+            ( { model
+                | photo = updateFeed toggleLike model.photo
+              }
             , Cmd.none
             )
 
         UpdateComment comment ->
-            ( { model | newComment = comment }
+            ( { model
+                | photo = updateFeed (updateComment comment) model.photo
+              }
             , Cmd.none
             )
 
         SaveComment ->
-            ( saveNewComment model
+            ( { model
+                | photo = updateFeed saveNewComment model.photo
+              }
             , Cmd.none
             )
 
