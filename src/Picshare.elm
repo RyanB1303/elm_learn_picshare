@@ -47,14 +47,7 @@ baseUrl =
 initialModel : Model
 initialModel =
     { photo =
-        Just
-            { id = 1
-            , url = baseUrl ++ "4.jpg"
-            , caption = "Wood"
-            , liked = False
-            , comments = [ "YTTA" ]
-            , newComment = ""
-            }
+        Nothing
     }
 
 
@@ -149,7 +142,8 @@ viewFeed maybePhoto =
             viewDetailedPhoto photo
 
         Nothing ->
-            text ""
+            div [ class "loading-feed" ]
+                [ text "Loading Feed..." ]
 
 
 view : Model -> Html Msg
@@ -225,7 +219,14 @@ update msg model =
             , Cmd.none
             )
 
-        LoadFeed _ ->
+        LoadFeed (Ok photo) ->
+            ( { model
+                | photo = Just photo
+              }
+            , Cmd.none
+            )
+
+        LoadFeed (Err _) ->
             ( model
             , Cmd.none
             )
