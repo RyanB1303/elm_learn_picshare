@@ -64,7 +64,7 @@ init _ =
 fetchFeed : Cmd Msg
 fetchFeed =
     Http.get
-        { url = baseUrl ++ "badfeed"
+        { url = baseUrl ++ "notfound"
         , expect = Http.expectJson LoadFeed (list photoDecoder)
         }
 
