@@ -7,6 +7,7 @@ import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Json.Decode exposing (Decoder, bool, int, list, string, succeed)
 import Json.Decode.Pipeline exposing (hardcoded, required)
+import WebSocket
 
 
 type alias Id =
@@ -49,6 +50,11 @@ baseUrl =
     "https://programming-elm.com/"
 
 
+wsUrl : String
+wsUrl =
+    "wss://programming-elm.com"
+
+
 initialModel : Model
 initialModel =
     { feed = Nothing
@@ -64,7 +70,7 @@ init _ =
 fetchFeed : Cmd Msg
 fetchFeed =
     Http.get
-        { url = baseUrl ++ "notfound"
+        { url = baseUrl ++ "feed"
         , expect = Http.expectJson LoadFeed (list photoDecoder)
         }
 
@@ -192,6 +198,7 @@ type Msg
     | UpdateComment Id String
     | SaveComment Id
     | LoadFeed (Result Http.Error Feed)
+    | LoadStreamPhoto String
 
 
 saveNewComment : Photo -> Photo
@@ -264,10 +271,8 @@ update msg model =
             )
 
         LoadFeed (Ok feed) ->
-            ( { model
-                | feed = Just feed
-              }
-            , Cmd.none
+            ( { model | feed = Just feed }
+            , WebSocket.listen wsUrl
             )
 
         LoadFeed (Err error) ->
@@ -275,10 +280,17 @@ update msg model =
             , Cmd.none
             )
 
+        LoadStreamPhoto data ->
+            let
+                _ =
+                    Debug.log "WebSocket data: " data
+            in
+            ( model, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    WebSocket.receive LoadStreamPhoto
 
 
 main : Program () Model Msg
