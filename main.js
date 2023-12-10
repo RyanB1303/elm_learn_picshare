@@ -6173,7 +6173,7 @@ var $author$project$Picshare$fetchFeed = $elm$http$Http$get(
 			$elm$http$Http$expectJson,
 			$author$project$Picshare$LoadFeed,
 			$elm$json$Json$Decode$list($author$project$Picshare$photoDecoder)),
-		url: $author$project$Picshare$baseUrl + 'feed'
+		url: $author$project$Picshare$baseUrl + 'badfeed'
 	});
 var $author$project$Picshare$initialModel = {error: $elm$core$Maybe$Nothing, feed: $elm$core$Maybe$Nothing};
 var $author$project$Picshare$init = function (_v0) {
